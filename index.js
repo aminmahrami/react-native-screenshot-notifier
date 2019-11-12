@@ -9,11 +9,12 @@ import { useEffect, useState } from "react";
 import { DeviceEventEmitter, PermissionsAndroid, AppState } from "react-native";
 //#region Android permission management
 const hasGalleryReadPermission = async () => {
-  return (
+  const hasPermission =
     (await PermissionsAndroid.check(
       PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
-    )) === "granted"
-  );
+    )) === "granted";
+
+  return hasPermission;
 };
 //#endregion
 //#region Event Listening
@@ -49,7 +50,7 @@ const start = async options => {
     callback = null;
   }
 
-  if (!hasGalleryReadPermission) {
+  if (!(await hasGalleryReadPermission())) {
     // Don't proceed if there is no Gallery Read permission
     return;
   }
@@ -73,15 +74,16 @@ const resume = async () => {
   return doResume();
 };
 const pause = async () => {
-  if (!hasGalleryReadPermission) {
-    // Don't proceed if there is no Gallery Read permission
-    return;
-  }
-
   if (_listener) {
     DeviceEventEmitter.removeListener("screenshotTaken", onScreenshotTaken);
     _listener = null;
   }
+
+  if (!(await hasGalleryReadPermission())) {
+    // Don't proceed if there is no Gallery Read permission
+    return;
+  }
+
   return doPause();
 };
 const addListener = f => {
