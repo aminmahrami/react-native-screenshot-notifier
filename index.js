@@ -8,23 +8,12 @@ import {
 import { useEffect, useState } from "react";
 import { DeviceEventEmitter, PermissionsAndroid, AppState } from "react-native";
 //#region Android permission management
-const getPermission = async (options = {}) => {
-  const {
-    title = "Screenshot Protector",
-    message = "HIGHLY RECOMMENDED. Permission to detect when a screenshot is taken while this app is open.",
-    buttonNeutral = "Ask me later",
-    buttonNegative = "Cancel",
-    buttonPositive = "OK"
-  } = options;
-  const granted = await PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-    { title, message, buttonNeutral, buttonNegative, buttonPositive }
+const hasGalleryReadPermission = async () => {
+  return (
+    (await PermissionsAndroid.check(
+      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
+    )) === "granted"
   );
-  if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-    //we can resume
-  } else {
-    throw "Screenshot permission denied";
-  }
 };
 //#endregion
 //#region Event Listening
@@ -59,7 +48,12 @@ const start = async options => {
     options = {};
     callback = null;
   }
-  await getPermission(options);
+
+  if (!hasGalleryReadPermission) {
+    // Don't proceed if there is no Gallery Read permission
+    return;
+  }
+
   if (callback) addListener(callback);
   await doStart();
   AppState.addEventListener("change", onAppStateChange);
@@ -79,6 +73,11 @@ const resume = async () => {
   return doResume();
 };
 const pause = async () => {
+  if (!hasGalleryReadPermission) {
+    // Don't proceed if there is no Gallery Read permission
+    return;
+  }
+
   if (_listener) {
     DeviceEventEmitter.removeListener("screenshotTaken", onScreenshotTaken);
     _listener = null;
