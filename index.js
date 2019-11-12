@@ -9,12 +9,9 @@ import { useEffect, useState } from "react";
 import { DeviceEventEmitter, PermissionsAndroid, AppState } from "react-native";
 //#region Android permission management
 const hasGalleryReadPermission = async () => {
-  const hasPermission =
-    (await PermissionsAndroid.check(
-      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
-    )) === "granted";
-
-  return hasPermission;
+  return PermissionsAndroid.check(
+    PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
+  );
 };
 //#endregion
 //#region Event Listening
